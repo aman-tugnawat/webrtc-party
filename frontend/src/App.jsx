@@ -439,7 +439,7 @@ function App() {
             isMyTurn={isMyTurn}
             winner={winner}
             handleMove={handleMove}
-            // dataChannel={dataChannel.current} // Might not be needed directly
+            dataChannel={dataChannel} // Pass the ref itself
           />
         );
       case VIEWS.HOME:
