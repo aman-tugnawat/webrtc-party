@@ -3,7 +3,6 @@ import './App.css';
 import HomePage from './components/HomePage';
 import WaitingRoom from './components/WaitingRoom';
 import TicTacToeGame from './components/TicTacToeGame';
-import PingPongGame from './components/PingPongGame'; // Import PingPongGame
 import { useWebRTC } from './hooks/useWebRTC'; // Import the hook
 
 // Placeholder for other game components if needed

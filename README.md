@@ -4,11 +4,11 @@
 
 This project provides a basic framework for creating and playing simple multiplayer browser games using WebRTC for peer-to-peer communication. The backend is built with Vert.x (Java), handling WebSocket signaling for session management and WebRTC negotiation. The frontend is built with React and Vite.
 
-Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong game implementation has been started but is **incomplete**.
+Currently, it includes a functional Tic Tac Toe game implementation.
 
 **Tech Stack:**
 
-*   **Backend:** Java 11, Vert.x 4.5.7 (Core, Web), Maven
+*   **Backend:** Java 11, Vert.x 4.5.7 (Core, Web), Gradle
 *   **Frontend:** React, Vite, JavaScript
 *   **Communication:** WebSockets (for signaling), WebRTC (for game data)
 
@@ -27,7 +27,7 @@ Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong
 
 *   **JDK 11 or later:** Required for the backend.
 *   **Node.js and npm/yarn:** Required for the frontend (includes Vite).
-*   **Maven:** Required to build and run the backend Vert.x application.
+*   **Gradle:** Required to build and run the backend Vert.x application (Gradle wrapper is included).
 
 ### Backend (`backend/`)
 
@@ -35,19 +35,19 @@ Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong
     ```bash
     cd backend
     ```
-2.  **Build the application:**
-    *   Compile the Java code using Maven:
+2.  **Build the application (optional, `run` task compiles):**
+    *   Use the Gradle wrapper to build:
         ```bash
-        mvn clean package
+        ./gradlew build
         ```
-    *   This will create an executable JAR file in the `target/` directory (e.g., `game-backend-1.0.0-SNAPSHOT.jar`).
+    *   This creates distributable formats (including a fat JAR) in `build/libs/`.
 
 3.  **Run the application:**
-    *   Execute the JAR file:
+    *   Use the Gradle wrapper's `run` task:
         ```bash
-        java -jar target/game-backend-1.0.0-SNAPSHOT.jar
+        ./gradlew run
         ```
-    *   Alternatively, you can run the `Launcher` class directly from your IDE.
+    *   Alternatively, you can run the main verticle class (`com.example.backend.MainVerticle`) directly from your IDE.
     *   The backend server will start, listening on port 8080 for WebSocket connections (`ws://localhost:8080/ws`).
 
 ### Frontend (`frontend/`)
@@ -95,7 +95,6 @@ Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong
 
 ## Known Issues
 
-*   **Ping Pong Incomplete:** The Ping Pong game implementation (`PingPongGame.jsx`, `usePingPongGame.js`) was started but is not fully functional or integrated. The application currently defaults to Tic Tac Toe.
 *   **Error Handling:** Basic error handling exists, but could be more robust (e.g., handling WebRTC connection failures more gracefully).
 *   **Scalability:** Designed primarily for two-player games. Supporting more players would require significant changes to session and WebRTC connection management.
 *   **UI/UX:** Styling is very basic. No game selection mechanism is implemented yet.
