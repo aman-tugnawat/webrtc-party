@@ -39,7 +39,7 @@ public class MainVerticle extends AbstractVerticle {
             ws.exceptionHandler(Throwable::printStackTrace); // Basic error handling
             ws.textMessageHandler(message -> handleWebSocketMessage(ws, message));
 
-        }).listen(8888, http -> {
+        }).listen(8080, http -> {
             if (http.succeeded()) {
                 System.out.println("HTTP server started on port 8888, WebSocket listening on /ws");
                 startPromise.complete();
