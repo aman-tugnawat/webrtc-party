@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Import useState, useCallback
 import './App.css';
 import HomePage from './components/HomePage';
 import WaitingRoom from './components/WaitingRoom';
@@ -34,33 +34,104 @@ function App() {
     startGame,
     broadcastData, // Get broadcastData from hook
     registerDataCallback, // Get registerDataCallback from hook
-    // We might need joinSession exposed if joining via URL later
+    joinSession, // Destructure joinSession
   } = useWebRTC();
 
-   // Attempt to connect WebSocket on initial load
+  // State for detailed connection status
+  type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false); // State for session creation loading
+
+   // Attempt to connect WebSocket on initial load and set 'connecting' status
    useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected && connectionStatus !== 'connecting') { // Avoid repeated calls if already connecting
+        console.log('[App.tsx] Attempting WebSocket connection...');
+        setConnectionStatus('connecting');
         connectWebSocket();
     }
-    // Optional: Add cleanup for disconnect on unmount if desired application-wide
+    // Optional: Cleanup not implemented here, might be handled in useWebRTC
     // return () => {
     //   disconnectWebSocket();
     // };
-   }, [connectWebSocket, isConnected]); // Dependencies ensure it runs once on mount
+   }, [connectWebSocket, isConnected, connectionStatus]); // Added connectionStatus dependency
+
+   // Effect to update status based on isConnected from the hook
+   useEffect(() => {
+     if (isConnected) {
+       setConnectionStatus('connected');
+       console.log('[App.tsx] WebSocket connected.');
+     } else {
+       // If was previously 'connected' or 'connecting', now it's 'disconnected'.
+       // We don't have explicit error state from the hook, so 'disconnected' covers general closure/failure.
+       // The 'error' state might be set if an error callback mechanism existed.
+       if (connectionStatus === 'connected' || connectionStatus === 'connecting') {
+         setConnectionStatus('disconnected');
+         console.log('[App.tsx] WebSocket disconnected.');
+       }
+       // If initial state is 'disconnected', it remains so until connection attempt.
+     } else {
+       // If was previously 'connected' or 'connecting', now it's 'disconnected'.
+       // We don't have explicit error state from the hook, so 'disconnected' covers general closure/failure.
+       // The 'error' state might be set if an error callback mechanism existed.
+       if (connectionStatus === 'connected' || connectionStatus === 'connecting') {
+         setConnectionStatus('disconnected');
+         console.log('[App.tsx] WebSocket disconnected.');
+         // If connection drops while trying to create, reset creation state
+         if (isCreatingSession) {
+           console.warn('[App.tsx] WebSocket disconnected while creating session.');
+           setIsCreatingSession(false); // Reset loading state on disconnect
+         }
+       }
+       // If initial state is 'disconnected', it remains so until connection attempt.
+     }
+   }, [isConnected, connectionStatus, isCreatingSession]); // Added isCreatingSession dependency
+
+   // Effect to turn off loading state when session is created (sessionId is set)
+   useEffect(() => {
+     if (sessionId && isCreatingSession) {
+       console.log('[App.tsx] Session created (sessionId received), setting isCreatingSession to false.');
+       setIsCreatingSession(false);
+     }
+   }, [sessionId, isCreatingSession]);
+
+
+   // Wrapper for createSession to handle loading state
+   const handleCreateSession = useCallback((gameType: string) => {
+     if (connectionStatus !== 'connected') { // Ensure connected before attempting
+       console.error("[App.tsx] Cannot create session: WebSocket not connected.");
+       // Optionally trigger a connection attempt or show error to user
+       return;
+     }
+     console.log('[App.tsx] Initiating session creation process...');
+     setIsCreatingSession(true); // Set loading state
+     createSession(gameType); // Call the original function from the hook
+   }, [createSession, connectionStatus]); // Dependencies for useCallback
 
 
   const renderContent = () => {
-     if (!isConnected && !sessionId) {
-        // Show HomePage even if not connected yet, allowing connection attempt
-         console.log("Rendering HomePage (Not Connected)");
-         return <HomePage connectWebSocket={connectWebSocket} createSession={createSession} isConnecting={!isConnected} />;
-     } else if (isConnected && !sessionId) {
-        // Connected but no session yet
-        console.log("Rendering HomePage (Connected, No Session)");
-        return <HomePage connectWebSocket={connectWebSocket} createSession={createSession} isConnecting={false} />;
-     } else if (sessionId && !isGameStarted) {
-        // In a session, waiting to start
-         console.log("Rendering WaitingRoom");
+      // Show loading message if creating session
+      if (isCreatingSession) {
+         console.log("Rendering 'Creating session...' message.");
+         return <div>Creating session...</div>; // Display loading message
+      }
+
+      // Use connectionStatus for rendering logic
+      // const isEffectivelyConnected = connectionStatus === 'connected'; // No longer needed here
+      const showHomePage = !sessionId; // Show home if no session ID regardless of connection status detail
+
+      if (showHomePage) {
+          console.log(`Rendering HomePage (Status: ${connectionStatus})`);
+          // Pass accurate connecting status and creation state/handler
+          return <HomePage
+                     connectWebSocket={connectWebSocket}
+                     createSession={handleCreateSession} // Pass the wrapper function
+                     joinSession={joinSession} // Pass joinSession down
+                     isConnecting={connectionStatus === 'connecting'}
+                     isCreatingSession={isCreatingSession} // Pass the loading state
+                 />;
+      } else if (sessionId && !isGameStarted) {
+         // In a session, waiting to start (implies connection was successful at some point)
+          console.log("Rendering WaitingRoom (Status: connected - assumed)"); // Assuming connected if in session
          return <WaitingRoom
                      sessionId={sessionId}
                      players={players.map(p => `${p.playerId}${p.playerId === playerId ? ' (You)' : ''}${p.playerId === players[0]?.playerId ? ' (Host)' : ''}`)} // Basic player formatting
@@ -90,7 +161,8 @@ function App() {
   return (
     <div className="App">
        <h1>WebRTC Game Lobby</h1>
-       <p>WS Connected: {isConnected ? 'Yes' : 'No'} | Player ID: {playerId || 'N/A'} | Session ID: {sessionId || 'N/A'} | Host: {isHost ? 'Yes' : 'No'}</p>
+       {/* Display detailed connection status */}
+       <p>Status: {connectionStatus} | Player ID: {playerId || 'N/A'} | Session ID: {sessionId || 'N/A'} | Host: {isHost ? 'Yes' : 'No'}</p>
        <hr />
        {renderContent()}
     </div>

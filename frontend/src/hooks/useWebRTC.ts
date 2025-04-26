@@ -381,25 +381,59 @@ export const useWebRTC = (): UseWebRTCReturn => {
 
             switch (type) {
                 case 'session_created':
-                    setSessionId(payload.sessionId);
-                    setPlayerId(payload.playerId);
-                    setPlayers(payload.players); // Expecting [{playerId: string}, ...]
-                    setIsHost(true);
-                    console.log(`Session ${payload.sessionId} created. You are host ${payload.playerId}. Players:`, payload.players);
+                    try {
+                        console.log("Received 'session_created' payload:", payload); // Log raw payload
+
+                        setSessionId(payload.sessionId);
+                        console.log("State updated - sessionId:", payload.sessionId); // Log after update
+
+                        setPlayerId(payload.playerId);
+                        console.log("State updated - playerId:", payload.playerId); // Log after update
+
+                        setPlayers(payload.players); // Expecting [{playerId: string}, ...]
+                        console.log("State updated - players:", payload.players); // Log after update
+
+                        setIsHost(true);
+                        console.log("State updated - isHost: true"); // Log after update
+
+                        console.log(`[useWebRTC] Successfully processed session_created: Session ${payload.sessionId}, Host ${payload.playerId}`);
+                    } catch (error) {
+                        console.error("[useWebRTC] Error processing 'session_created' payload:", error, "Payload:", payload);
+                        // Optionally reset state or signal error here if needed
+                    }
                     break;
 
                 case 'session_joined':
-                     if (payload.playerId === playerId) { // Confirmation for self
-                        setSessionId(payload.sessionId);
-                        // PlayerId already set by the backend message handler now
-                        setPlayers(payload.players);
-                        setGameType(payload.gameType);
-                        setIsHost(false); // Joined, so not host
-                        console.log(`Joined session ${payload.sessionId} as player ${payload.playerId}. Players:`, payload.players);
-                     } else {
-                        // This case shouldn't happen if backend sends session_joined only to the joiner
-                        console.warn("Received session_joined for another player?", payload);
-                     }
+                    try {
+                        // Log only if this message is for the current player
+                        if (payload.playerId === playerId) {
+                            console.log("Received 'session_joined' payload for self:", payload); // Log raw payload
+
+                            setSessionId(payload.sessionId);
+                            console.log("State updated - sessionId:", payload.sessionId); // Log after update
+
+                            // PlayerId should already be set if the backend confirms it
+                            // If the backend *only* sets it here, uncomment the next two lines:
+                            // setPlayerId(payload.playerId);
+                            // console.log("State updated - playerId:", payload.playerId);
+
+                            setPlayers(payload.players);
+                            console.log("State updated - players:", payload.players); // Log after update
+
+                            setGameType(payload.gameType);
+                            console.log("State updated - gameType:", payload.gameType); // Log after update
+
+                            setIsHost(false); // Joined, so not host
+                            console.log("State updated - isHost: false"); // Log after update
+
+                            console.log(`[useWebRTC] Successfully processed session_joined: Session ${payload.sessionId}, Player ${payload.playerId}`);
+                        } else {
+                            // This case might occur if the message structure changes or if there's a logic flaw.
+                            console.warn("[useWebRTC] Received 'session_joined' message, but the playerId in the payload doesn't match the current playerId.", "Payload:", payload, "Current PlayerId:", playerId);
+                        }
+                    } catch (error) {
+                        console.error("[useWebRTC] Error processing 'session_joined' payload:", error, "Payload:", payload);
+                    }
                     break;
 
                 case 'player_joined': // Sent to existing players when someone new joins

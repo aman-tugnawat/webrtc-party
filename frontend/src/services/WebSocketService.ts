@@ -12,10 +12,13 @@ class WebSocketService {
     private maxReconnectAttempts = 5;
     private reconnectInterval = 3000; // 3 seconds
 
-    private constructor() {}
+    private constructor() {
+        console.info('[WebSocketService] Constructor called.'); // Log constructor call
+    }
 
     public static getInstance(): WebSocketService {
         if (!WebSocketService.instance) {
+            console.info('[WebSocketService] Creating new instance.'); // Log instance creation
             WebSocketService.instance = new WebSocketService();
         }
         return WebSocketService.instance;
@@ -30,7 +33,7 @@ class WebSocketService {
         }
 
         this.url = url; // Store url for potential reconnects
-        console.log(`Attempting to connect WebSocket to ${url}...`);
+        console.info(`[WebSocketService] Attempting to connect WebSocket to ${url}...`); // Changed to info
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
@@ -49,13 +52,13 @@ class WebSocketService {
             }
         };
 
-        this.ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            // Error doesn't always trigger close, but we might want to handle specific errors
+        this.ws.onerror = (event: Event) => { // Added Event type
+            console.error('[WebSocketService] WebSocket error:', event); // Log the full event
+            // Consider adding an error callback mechanism here if needed by App/hook
         };
 
         this.ws.onclose = (event) => {
-            console.log(`WebSocket connection closed: Code=${event.code}, Reason=${event.reason}`);
+             console.warn(`[WebSocketService] WebSocket connection closed: Code=${event.code}, Reason='${event.reason}'`); // Changed to warn, added quotes for reason
             this.ws = null; // Clear the instance
             this.closeListeners.forEach(callback => callback(event));
 
