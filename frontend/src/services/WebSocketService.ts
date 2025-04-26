@@ -22,6 +22,7 @@ class WebSocketService {
     }
 
     connect(url: string): void {
+        console.log('[WebSocketService] connect method called with URL:', url); // Added for debugging
         // Prevent multiple connections
         if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
             console.log('WebSocket is already connected or connecting.');
