@@ -55,14 +55,8 @@ const HomePage: React.FC<HomePageProps> = ({ connectWebSocket, createSession, is
         </button>
       </div>
       {/* TODO: Add UI for joining an existing session using an ID */}
-       {/*
-       <div>
-           <h3>Join Existing Game</h3>
-           <input type="text" placeholder="Enter Game Code (e.g., ABCD)" maxLength={4} />
-           <button disabled={isConnecting}>Join Game</button>
-       </div>
-       */}
      </div>
+</div>
   );
 };
 

@@ -12,7 +12,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({ sessionId, players, isHost, s
   // State is now managed by useWebRTC hook in App.tsx
 
   // Calculate shareable URL based on props
-  const shareableUrl = `${window.location.origin}/join/${sessionId}`; // Use sessionId prop
+  const shareableUrl = `${window.location.origin}/?session=${sessionId}`; // Use query parameter
 
   const handleStartGameClick = () => {
     console.log(`Requesting to start game for session ${sessionId}...`);

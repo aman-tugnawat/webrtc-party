@@ -1,10 +1,20 @@
 # Vert.x + React WebRTC Game Framework
 
+a new WebRTC based framework to enable multiplayer gaming for webgame with starting example of two simple games:
+
+1. Tic Tac Toe
+
+2. 2D ping-pong
+
+The frame should provide a user to have the ability to create a new multiplayer game session. With the option to select select total number players to start game and other game options.
+
+Its should create a waiting room with unique 4 character code for game session and unique URL. Where everyone can see who has joined and host can start the game when all required players have joined.
+
 ## Overview
 
 This project provides a basic framework for creating and playing simple multiplayer browser games using WebRTC for peer-to-peer communication. The backend is built with Vert.x (Java), handling WebSocket signaling for session management and WebRTC negotiation. The frontend is built with React and Vite.
 
-Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong game implementation has been started but is **incomplete**.
+Currently, it includes a functional Tic Tac Toe game implementation. A Ping Pong game implementation has been started.
 
 **Tech Stack:**
 

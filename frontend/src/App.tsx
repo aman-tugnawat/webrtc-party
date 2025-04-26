@@ -3,7 +3,6 @@ import './App.css';
 import HomePage from './components/HomePage';
 import WaitingRoom from './components/WaitingRoom';
 import TicTacToeGame from './components/TicTacToeGame';
-import PingPongGame from './components/PingPongGame'; // Import PingPongGame
 import { useWebRTC } from './hooks/useWebRTC'; // Import the hook
 
 // Placeholder for other game components if needed
@@ -31,10 +30,10 @@ function App() {
     isConnected,
     connectWebSocket,
     createSession,
+    joinSession, // Destructure joinSession
     startGame,
     broadcastData, // Get broadcastData from hook
     registerDataCallback, // Get registerDataCallback from hook
-    // We might need joinSession exposed if joining via URL later
   } = useWebRTC();
 
    // Attempt to connect WebSocket on initial load
@@ -47,6 +46,18 @@ function App() {
     //   disconnectWebSocket();
     // };
    }, [connectWebSocket, isConnected]); // Dependencies ensure it runs once on mount
+
+   // Effect to handle joining via URL
+   useEffect(() => {
+       const params = new URLSearchParams(window.location.search);
+       const sessionIdFromUrl = params.get('session');
+
+       if (sessionIdFromUrl && isConnected && !sessionId) {
+           console.log(`Attempting to join session ${sessionIdFromUrl} from URL...`);
+           joinSession(sessionIdFromUrl);
+       }
+       // Run only once on mount, but depend on isConnected and sessionId to re-evaluate if connection drops/reconnects or if session state changes unexpectedly
+   }, [isConnected, sessionId, joinSession]);
 
 
   const renderContent = () => {

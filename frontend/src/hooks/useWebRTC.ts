@@ -324,7 +324,8 @@ export const useWebRTC = (): UseWebRTCReturn => {
             // console.log(`Added ICE candidate from ${senderId}`); // Can be noisy
         } catch (error) {
              // Ignore benign errors like candidate already added or adding null candidate after end-of-candidates
-             if (error instanceof DOMException && error.message.includes("Cannot add null candidate") || error.message.includes("Error processing ICE candidate")) {
+             // Check if error is an instance of Error before accessing message
+             if (error instanceof Error && (error.message.includes("Cannot add null candidate") || error.message.includes("Error processing ICE candidate"))) {
                  // console.log(`Ignoring benign ICE candidate error for ${senderId}: ${error.message}`);
              } else {
                 console.error(`Error adding ICE candidate from ${senderId}:`, error);
@@ -389,17 +390,14 @@ export const useWebRTC = (): UseWebRTCReturn => {
                     break;
 
                 case 'session_joined':
-                     if (payload.playerId === playerId) { // Confirmation for self
-                        setSessionId(payload.sessionId);
-                        // PlayerId already set by the backend message handler now
-                        setPlayers(payload.players);
-                        setGameType(payload.gameType);
-                        setIsHost(false); // Joined, so not host
-                        console.log(`Joined session ${payload.sessionId} as player ${payload.playerId}. Players:`, payload.players);
-                     } else {
-                        // This case shouldn't happen if backend sends session_joined only to the joiner
-                        console.warn("Received session_joined for another player?", payload);
-                     }
+                    // This message is specifically for the player who just joined.
+                    // Update state directly from the payload.
+                    setSessionId(payload.sessionId);
+                    setPlayerId(payload.playerId); // Set the player's own ID
+                    setPlayers(payload.players);
+                    setGameType(payload.gameType);
+                    setIsHost(false); // Joined, so not host
+                    console.log(`Joined session ${payload.sessionId} as player ${payload.playerId}. Players:`, payload.players);
                     break;
 
                 case 'player_joined': // Sent to existing players when someone new joins
