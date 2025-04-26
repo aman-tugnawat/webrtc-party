@@ -247,10 +247,11 @@ public class MainVerticle extends AbstractVerticle {
 
         if (playerId != null) {
             playerConnections.remove(playerId); // Remove connection reference
-            System.out.println("WebSocket closed for player: " + playerId);
+            System.out.println("[Close] WebSocket closed for player: " + playerId + ". Hash: " + wsHashCode);
 
             // Find which session the player was in
             // This is inefficient; ideally, store sessionId with player connection info
+            System.out.println("[Close] Searching for session containing player: " + playerId);
             GameSession sessionPlayerWasIn = null;
             String sessionIdPlayerWasIn = null;
             for (Map.Entry<String, GameSession> entry : sessionManager.getAllSessions().entrySet()) {
@@ -262,21 +263,51 @@ public class MainVerticle extends AbstractVerticle {
             }
 
             if (sessionPlayerWasIn != null && sessionIdPlayerWasIn != null) {
-                 System.out.println("Player " + playerId + " was in session " + sessionIdPlayerWasIn);
-                 // Remove player from session logic (triggers broadcast internally if needed)
-                 sessionManager.removePlayer(sessionIdPlayerWasIn, playerId); // This might delete the session
+                 System.out.println("[Close] Player " + playerId + " found in session " + sessionIdPlayerWasIn);
 
-                // Check if session still exists after removal (it might have been deleted if host left or empty)
-                GameSession currentSessionState = sessionManager.getSession(sessionIdPlayerWasIn);
-                if (currentSessionState != null) {
-                    // Notify remaining players
-                    broadcastPlayerUpdate(currentSessionState, new Player(playerId), true); // true = leaving
-                } else {
-                     System.out.println("Session " + sessionIdPlayerWasIn + " was deleted after player " + playerId + " left.");
-                }
+                 // *** Potential Issue Area ***
+                 // We should ideally broadcast *before* potentially deleting the session via removePlayer.
+                 // For now, let's log the state before and after removal.
+
+                 System.out.println("[Close] Preparing to broadcast player_left for " + playerId + " in session " + sessionIdPlayerWasIn);
+                 // Temporarily store remaining players *before* removal for broadcast context
+                 // Note: This is a workaround; ideally SessionManager handles this notification atomically.
+                 Map<String, Player> playersBeforeRemoval = new ConcurrentHashMap<>(sessionPlayerWasIn.getPlayers());
+                 playersBeforeRemoval.remove(playerId); // Simulate state after removal for broadcast list
+
+                 // Broadcast player_left *before* removing the player from the manager
+                 // Create a temporary player object just for the broadcast payload
+                 Player leavingPlayer = new Player(playerId);
+                 JsonObject playerLeftMessage = new JsonObject()
+                     .put("type", "player_left")
+                     .put("payload", new JsonObject()
+                         .put("playerId", leavingPlayer.getPlayerId())
+                         .put("players", new JsonArray(
+                             playersBeforeRemoval.values().stream()
+                                 .map(p -> new JsonObject().put("playerId", p.getPlayerId()))
+                                 .collect(Collectors.toList())
+                         )));
+                 System.out.println("[Close] Broadcasting player_left message: " + playerLeftMessage.encode());
+                 broadcastToSession(sessionPlayerWasIn, playerLeftMessage.encode(), playerId); // Exclude the leaving player
+
+                 // Now, remove the player from the session manager
+                 System.out.println("[Close] Removing player " + playerId + " from SessionManager for session " + sessionIdPlayerWasIn);
+                 sessionManager.removePlayer(sessionIdPlayerWasIn, playerId); // This method returns void. It might delete the session internally.
+
+                 // We can't know for sure if the session was deleted just from the removePlayer call.
+                 // SessionManager logic determines session deletion (e.g., if host leaves or becomes empty).
+                 System.out.println("[Close] Player " + playerId + " removed via SessionManager. Session deletion depends on SessionManager logic.");
+                 // We could check if the session still exists *after* removal if needed:
+                 // GameSession currentSessionState = sessionManager.getSession(sessionIdPlayerWasIn);
+                 // if (currentSessionState == null) {
+                 //     System.out.println("[Close] Session " + sessionIdPlayerWasIn + " no longer exists after removing player " + playerId);
+                 // } else {
+                 //     System.out.println("[Close] Session " + sessionIdPlayerWasIn + " still exists after removing player " + playerId);
+                 // }
+
 
             } else {
-                 System.out.println("Player " + playerId + " was not found in any active session upon disconnect.");
+                 System.out.println("[Close] Player " + playerId + " was not found in any active session upon disconnect.");
             }
 
         } else {
@@ -315,15 +346,37 @@ public class MainVerticle extends AbstractVerticle {
     }
 
      private void broadcastToSession(GameSession session, String message, String excludePlayerId) {
-        System.out.println("Broadcasting to session " + session.getSessionId() + (excludePlayerId != null ? " (excluding " + excludePlayerId + ")" : "") + ": " + message);
+        if (session == null) {
+            System.err.println("[Broadcast] Attempted to broadcast to a null session!");
+            return;
+        }
+        System.out.println("[Broadcast] Broadcasting to session " + session.getSessionId() + (excludePlayerId != null ? " (excluding " + excludePlayerId + ")" : "") + ": " + message);
+        if (session.getPlayers().isEmpty()) {
+             System.out.println("[Broadcast] No players in session " + session.getSessionId() + " to broadcast to.");
+             return;
+        }
         session.getPlayers().values().forEach(player -> {
-            if (!player.getPlayerId().equals(excludePlayerId)) {
-                ServerWebSocket targetWs = playerConnections.get(player.getPlayerId());
+            // Ensure player object is not null before accessing methods
+            if (player == null) {
+                System.err.println("[Broadcast] Encountered null player object in session " + session.getSessionId());
+                return; // Skip this iteration
+            }
+            String currentPlayerId = player.getPlayerId();
+            if (currentPlayerId == null) {
+                 System.err.println("[Broadcast] Encountered player with null ID in session " + session.getSessionId());
+                 return; // Skip this iteration
+            }
+
+            if (!currentPlayerId.equals(excludePlayerId)) {
+                 System.out.println("[Broadcast] Targeting player " + currentPlayerId + " in session " + session.getSessionId());
+                ServerWebSocket targetWs = playerConnections.get(currentPlayerId);
                 if (targetWs != null && !targetWs.isClosed()) {
                     targetWs.writeTextMessage(message);
                 } else {
-                     System.out.println("Skipping broadcast to player " + player.getPlayerId() + ": WebSocket not found or closed.");
+                     System.out.println("[Broadcast] Skipping broadcast to player " + currentPlayerId + ": WebSocket not found or closed.");
                 }
+            } else {
+                 System.out.println("[Broadcast] Skipping broadcast to excluded player " + excludePlayerId);
             }
         });
     }
