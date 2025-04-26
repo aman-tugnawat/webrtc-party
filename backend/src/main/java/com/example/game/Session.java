@@ -11,6 +11,7 @@ public class Session {
     private final String sessionCode;
     // Use a thread-safe list as WebSockets can connect/disconnect concurrently
     private final List<ServerWebSocket> players = new CopyOnWriteArrayList<>();
+    private ServerWebSocket host; // Added field for the session host
 
     public Session(String sessionCode) {
         this.sessionCode = sessionCode;
