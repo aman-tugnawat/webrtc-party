@@ -27,6 +27,8 @@ public class MainVerticle extends AbstractVerticle {
     public void start(Promise<Void> startPromise) throws Exception {
 
         HttpServer server = vertx.createHttpServer();
+        String host = "127.0.0.1"; // TODO make this configurable Load configuration from config.json
+        int port =  8080; // TODO make this configurable Load configuration from config.json
 
         server.webSocketHandler(ws -> {
             // --- WebSocket Connection Handling ---
@@ -39,9 +41,9 @@ public class MainVerticle extends AbstractVerticle {
             ws.exceptionHandler(Throwable::printStackTrace); // Basic error handling
             ws.textMessageHandler(message -> handleWebSocketMessage(ws, message));
 
-        }).listen(8080, http -> {
+        }).listen(port, host, http -> {
             if (http.succeeded()) {
-                System.out.println("HTTP server started on port 8888, WebSocket listening on /ws");
+                System.out.println("HTTP server started on \" + host + \":\" + port, WebSocket listening on /ws");
                 startPromise.complete();
             } else {
                 System.err.println("Could not start HTTP server: " + http.cause());
