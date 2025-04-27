@@ -45,7 +45,7 @@ export const useWebRTC = (): UseWebRTCReturn => {
     const connectWebSocket = useCallback(() => {
         if (!WebSocketService.isConnected()) {
              // Ensure environment variable is handled correctly (provide fallback for local dev)
-             const wsUrl = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8888/ws`;
+             const wsUrl = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8080/ws`;
              console.log("Connecting WS to:", wsUrl);
              WebSocketService.connect(wsUrl);
         }

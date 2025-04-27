@@ -4,7 +4,8 @@ import App from './App.tsx'
 import './index.css'
 import WebSocketService from './services/WebSocketService';
 
-WebSocketService.connect('ws://localhost:8080/ws'); // Attempt to connect
+const wsUrl = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8080/ws`;
+WebSocketService.connect(wsUrl); // Attempt to connect
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
