@@ -142,20 +142,13 @@ const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ broadcastData, registerDa
 
 
   // --- Render Logic ---
-  const boardStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 80px)', // Cell width defined in Cell.tsx
-    gridTemplateRows: 'repeat(3, 80px)',    // Cell height defined in Cell.tsx
-    gap: '5px',
-    maxWidth: '255px', // 3 * 80 + 2 * 5 (gap)
-    margin: '20px auto',
-  };
+  // Removed inline boardStyle, will use CSS classes
 
   return (
-    <div>
+    <div className="game-component card tic-tac-toe-game"> {/* Added classes */}
       <h3>Tic Tac Toe</h3>
-      <p style={{ fontWeight: 'bold', minHeight: '1.5em' }}>{statusMessage}</p>
-      <div style={boardStyle}>
+      <p className="game-status" style={{ fontWeight: 'bold', minHeight: '1.5em', marginBottom: '1rem' }}>{statusMessage}</p>
+      <div className="tic-tac-toe-board"> {/* Added class for board styling */}
         {board.map((cellValue, index) => (
           <Cell
             key={index}
@@ -166,9 +159,11 @@ const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ broadcastData, registerDa
         ))}
       </div>
       {winner && (
-        <button onClick={resetGame} style={{ marginTop: '1rem' }}>
-          Play Again?
-        </button>
+        <div className="action-area" style={{ marginTop: '1.5rem' }}>
+            <button onClick={resetGame} className="btn btn-secondary"> {/* Use btn styles */}
+              Play Again?
+            </button>
+        </div>
       )}
     </div>
   );

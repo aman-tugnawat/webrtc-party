@@ -7,22 +7,13 @@ interface CellProps {
 }
 
 const Cell: React.FC<CellProps> = ({ value, onClick, disabled }) => {
-  const style: React.CSSProperties = {
-    width: '80px',
-    height: '80px',
-    fontSize: '3em',
-    fontWeight: 'bold',
-    border: '2px solid #ccc',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    backgroundColor: '#fff', // Light background for cells
-    color: value === 'X' ? '#ff4136' : '#0074d9', // Red for X, Blue for O
-  };
+  // Remove inline style object
+
+  // Determine class names based on value
+  const classNames = `cell ${value ? value : ''}`; // Base class 'cell', add 'X' or 'O' if value exists
 
   return (
-    <button style={style} onClick={onClick} disabled={disabled}>
+    <button className={classNames} onClick={onClick} disabled={disabled}>
       {value}
     </button>
   );
