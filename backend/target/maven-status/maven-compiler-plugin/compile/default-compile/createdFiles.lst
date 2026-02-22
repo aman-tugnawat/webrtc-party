@@ -1,0 +1,5 @@
+com/example/game/SessionManager.class
+com/example/game/Player.class
+com/example/game/GameSession.class
+com/example/game/MainVerticle.class
+com/example/game/Launcher.class
