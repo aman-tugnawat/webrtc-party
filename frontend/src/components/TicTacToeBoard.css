@@ -1,0 +1,46 @@
+.tic-tac-toe-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+  grid-template-rows: repeat(3, 1fr); /* 3 equal rows */
+  width: 300px; /* Fixed width */
+  height: 300px; /* Fixed height */
+  gap: 5px; /* Gap between cells */
+  margin: 20px auto; /* Center the board */
+  border: 2px solid #666; /* Border around the board */
+  background-color: #444; /* Background for the grid gaps */
+  padding: 5px; /* Padding inside the border */
+  border-radius: 5px;
+}
+
+.cell {
+  background-color: #555; /* Darker cell background */
+  border: 1px solid #666; /* Cell border */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem; /* Large font for X/O */
+  font-weight: bold;
+  color: #eee; /* Light text */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 3px;
+  aspect-ratio: 1 / 1; /* Make cells square */
+}
+
+.cell:hover:not(:disabled) {
+  background-color: #6a6a6a; /* Lighter background on hover if enabled */
+}
+
+.cell:disabled {
+  cursor: not-allowed;
+  color: #aaa; /* Grey out text in disabled cells */
+}
+
+/* Style for X and O marks */
+.cell-x {
+  color: #ff7979; /* Light red for X */
+}
+
+.cell-o {
+  color: #7ed6df; /* Light blue for O */
+}
